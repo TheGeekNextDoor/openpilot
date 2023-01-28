@@ -268,7 +268,7 @@ class LongRangeLead():
   def __init__(self, dt, derivative_period=1.0):
     self.DREL_BP = [LEAD_MIN_SMOOTHING_DISTANCE, LEAD_MAX_DISTANCE] # [m] used commonly between distance-based parameters
     self.D_DREL_MAX_V = [8., 20.] # [m] deviation between old and new leads necessary to trigger reset of values
-    self.ALPHA_V = [0, 1.] # raise/lower second value for more/less smoothing of long-range lead data
+    self.ALPHA_V = [0., 1.] # raise/lower second value for more/less smoothing of long-range lead data
     self.D_YREL_MAX = 0.8 # [m] max yrel deviation
     self.dRel = FirstOrderFilter(0., 0., dt, initialized=False)
     self.vRel = FirstOrderFilter(0., 0., dt, initialized=False)
@@ -315,18 +315,26 @@ class LongRangeLead():
           or abs(self.lead_last['dRel'] - lead['dRel']) > 2.5:
         self.reset_deriv()
       alpha = interp(lead['dRel'], self.DREL_BP, self.ALPHA_V)
-      self.dRel.update_alpha(alpha)
-      self.vRel.update_alpha(alpha)
-      self.vLead.update_alpha(alpha)
-      self.vLeadK.update_alpha(alpha)
-      self.aLeadK.update_alpha(alpha)
-      self.aLeadTau.update_alpha(alpha)
-      self.dRel.update(lead['dRel'])
-      self.vRel.update(lead['vRel'])
-      self.vLead.update(lead['vLead'])
-      self.vLeadK.update(lead['vLeadK'])
-      self.aLeadK.update(lead['aLeadK'])
-      self.aLeadTau.update(lead['aLeadTau'])
+      if alpha == 0.0:
+        self.dRel.x = lead['dRel']
+        self.vRel.x = lead['vRel']
+        self.vLead.x = lead['vLead']
+        self.vLeadK.x = lead['vLeadK']
+        self.aLeadK.x = lead['aLeadK']
+        self.aLeadTau.x = lead['aLeadTau']
+      else:
+        self.dRel.update_alpha(alpha)
+        self.vRel.update_alpha(alpha)
+        self.vLead.update_alpha(alpha)
+        self.vLeadK.update_alpha(alpha)
+        self.aLeadK.update_alpha(alpha)
+        self.aLeadTau.update_alpha(alpha)
+        self.dRel.update(lead['dRel'])
+        self.vRel.update(lead['vRel'])
+        self.vLead.update(lead['vLead'])
+        self.vLeadK.update(lead['vLeadK'])
+        self.aLeadK.update(lead['aLeadK'])
+        self.aLeadTau.update(lead['aLeadTau'])
       
       self.y_rel_vals.append(lead['yRel'])
       if self.vLeadK.x > 0.9 and len(self.y_rel_vals) == self.y_rel_vals.maxlen:
