@@ -311,9 +311,6 @@ class LongRangeLead():
           abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX)):
         self.reset()
         self.reset_deriv()
-      elif abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX \
-          or abs(self.lead_last['dRel'] - lead['dRel']) > 2.5:
-        self.reset_deriv()
       alpha = interp(lead['dRel'], self.DREL_BP, self.ALPHA_V)
       if alpha == 0.0:
         self.dRel.x = lead['dRel']
@@ -336,12 +333,20 @@ class LongRangeLead():
         self.aLeadK.update(lead['aLeadK'])
         self.aLeadTau.update(lead['aLeadTau'])
       
-      self.y_rel_vals.append(lead['yRel'])
-      if self.vLeadK.x > 0.9 and len(self.y_rel_vals) == self.y_rel_vals.maxlen:
-        cap = abs(self.vLead.x) * 0.5
-        self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
-      else:
-        self.vLat = 0.0
+      self.vLat = 0.0
+      if lead['checkSource'] == 'modelLead' \
+          and self.lead_last is not None \
+          and self.lead_last['status'] \
+          and self.lead_last['checkSource'] == 'modelLead':
+        if abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX \
+            or abs(self.lead_last['dRel'] - lead['dRel']) > 2.5 \
+            or lead['dRel'] > 80.0:
+          self.reset_deriv()
+        else:
+          self.y_rel_vals.append(lead['yRel'])
+          if self.vLeadK.x > 0.9 and len(self.y_rel_vals) == self.y_rel_vals.maxlen:
+            cap = abs(self.vLead.x) * 0.5
+            self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
     
     self.lead_last = lead
     
