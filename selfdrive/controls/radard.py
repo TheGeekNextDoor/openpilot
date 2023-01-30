@@ -285,7 +285,7 @@ class LongRangeLead():
     self.y_rel_vals = deque(maxlen=max(2, self._d_period))
     
     self._debug_freq = 30
-    self._debug_counter = self._debug_freq
+    self._debug_counter = 30
     self.log()
     
   def log(self):
