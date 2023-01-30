@@ -283,6 +283,17 @@ class LongRangeLead():
     self._d_period = round(derivative_period * self._rate)  # period of time for derivative calculation (seconds converted to frames)
     self._d_period_recip = 1. / self._d_period
     self.y_rel_vals = deque(maxlen=max(2, self._d_period))
+    
+    self._debug_freq = 30
+    self._debug_counter = self._debug_freq
+    self.log()
+    
+  def log(self):
+    if self._debug_counter >= self._debug_freq:
+      cloudlog.info(f"{self._rate = }, {self._d_period = }, {self._d_period_recip = }, {self.y_rel_vals = }")
+      self._debug_counter = 0
+    else:
+      self._debug_counter += 1
   
   def reset(self):
     self.lead_last = None
@@ -301,6 +312,7 @@ class LongRangeLead():
     self.y_rel_vals = deque(maxlen=max(2, self._d_period))
   
   def update(self, lead, use_v_lat=False):
+    self.log()
     if not lead['status']:
       self.reset()
       self.reset_deriv()
