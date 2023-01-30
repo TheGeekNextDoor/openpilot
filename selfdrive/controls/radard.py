@@ -303,24 +303,25 @@ class LongRangeLead():
     self.aLeadTau.initialized=False
     self.vLat = 0.0
   
-  def reset_deriv(self, derivative_period=None):
+  def reset_deriv(self, derivative_period=None, reason=''):
     if derivative_period is not None:
       self._d_period = round(derivative_period * self._rate)  # period of time for derivative calculation (seconds converted to frames)
       self._d_period_recip = 1. / self._d_period
     self.y_rel_vals = deque(maxlen=max(2, self._d_period))
+    cloudlog.info(f"long range lead resetting vLat calculation. {reason = }")
   
   def update(self, lead, use_v_lat=False):
     self.log()
     if not lead['status']:
       self.reset()
-      self.reset_deriv()
+      self.reset_deriv(reason=str(lead))
     else:
       if lead['checkSource'] == 'modelLead' or lead['dRel'] < self.DREL_BP[0] or \
           (self.lead_last is not None and self.lead_last['status'] and \
           (abs(self.lead_last['dRel'] - lead['dRel']) > interp(lead['dRel'], self.DREL_BP, self.D_DREL_MAX_V) or \
           abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX)):
         self.reset()
-        self.reset_deriv()
+        self.reset_deriv(reason=str(lead))
       alpha = interp(lead['dRel'], self.DREL_BP, self.ALPHA_V)
       if alpha == 0.0:
         self.dRel.x = lead['dRel']
@@ -348,11 +349,10 @@ class LongRangeLead():
           and self.lead_last is not None \
           and self.lead_last['status'] \
           and self.lead_last['checkSource'] == 'modelLead':
-        if abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX \
-            or abs(self.lead_last['dRel'] - lead['dRel']) > 2.5 \
+        if abs(self.lead_last['dRel'] - lead['dRel']) > 2.5 \
             or lead['dRel'] > 80.0 \
             or self.vLeadK.x < 0.5:
-          self.reset_deriv()
+          self.reset_deriv(reason=str(lead))
         else:
           self.y_rel_vals.append(lead['yRel'])
           if len(self.y_rel_vals) == self.y_rel_vals.maxlen:
