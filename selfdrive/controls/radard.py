@@ -280,9 +280,7 @@ class LongRangeLead():
     self.reset()
     
     self._rate = 1/dt
-    self._d_period = round(derivative_period * self._rate)  # period of time for derivative calculation (seconds converted to frames)
-    self._d_period_recip = 1. / self._d_period
-    self.y_rel_vals = deque(maxlen=max(2, self._d_period))
+    self.reset_deriv(derivative_period=derivative_period)
     
     self._debug_freq = 30
     self._debug_counter = 30
@@ -361,8 +359,6 @@ class LongRangeLead():
             cap = abs(self.vLead.x) * 0.5
             self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
     
-    self.lead_last = lead
-    
     if lead['status'] and lead['checkSource'] != 'modelLead':
       lead['dRel'] = self.dRel.x
       lead['vRel'] = self.vRel.x
@@ -379,6 +375,8 @@ class LongRangeLead():
       lead['vRel'] += v_lead_mag - lead['vLead']
       lead['vLead'] = v_lead_mag
       lead['vLeadK'] = v_lead_k_mag
+      
+    self.lead_last = lead
     
     return lead
 
