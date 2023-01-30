@@ -281,17 +281,6 @@ class LongRangeLead():
     
     self._rate = 1/dt
     self.reset_deriv(derivative_period=derivative_period)
-    
-    self._debug_freq = 30
-    self._debug_counter = 30
-    self.log()
-    
-  def log(self):
-    if self._debug_counter >= self._debug_freq:
-      cloudlog.info(f"{self._rate = }, {self._d_period = }, {self._d_period_recip = }, {self.y_rel_vals = }")
-      self._debug_counter = 0
-    else:
-      self._debug_counter += 1
   
   def reset(self):
     self.lead_last = None
@@ -301,27 +290,24 @@ class LongRangeLead():
     self.vLeadK.initialized=False
     self.aLeadK.initialized=False
     self.aLeadTau.initialized=False
-    self.vLat = 0.0
   
   def reset_deriv(self, derivative_period=None, reason=''):
     if derivative_period is not None:
       self._d_period = round(derivative_period * self._rate)  # period of time for derivative calculation (seconds converted to frames)
       self._d_period_recip = 1. / self._d_period
     self.y_rel_vals = deque(maxlen=max(2, self._d_period))
-    cloudlog.info(f"long range lead resetting vLat calculation. {reason = }")
+    self.vLat = 0.0
   
   def update(self, lead, use_v_lat=False):
-    self.log()
     if not lead['status']:
       self.reset()
-      self.reset_deriv(reason=str(lead))
+      self.reset_deriv()
     else:
       if lead['checkSource'] == 'modelLead' or lead['dRel'] < self.DREL_BP[0] or \
           (self.lead_last is not None and self.lead_last['status'] and \
           (abs(self.lead_last['dRel'] - lead['dRel']) > interp(lead['dRel'], self.DREL_BP, self.D_DREL_MAX_V) or \
           abs(self.lead_last['yRel'] - lead['yRel']) > self.D_YREL_MAX)):
         self.reset()
-        self.reset_deriv(reason=str(lead))
       alpha = interp(lead['dRel'], self.DREL_BP, self.ALPHA_V)
       if alpha == 0.0:
         self.dRel.x = lead['dRel']
@@ -352,11 +338,11 @@ class LongRangeLead():
         if abs(self.lead_last['dRel'] - lead['dRel']) > 2.5 \
             or lead['dRel'] > 80.0 \
             or self.vLeadK.x < 0.5:
-          self.reset_deriv(reason=str(lead))
+          self.reset_deriv()
         else:
           self.y_rel_vals.append(lead['yRel'])
           if len(self.y_rel_vals) == self.y_rel_vals.maxlen:
-            cap = abs(self.vLead.x) * 0.5
+            cap = abs(lead['vLead']) * 0.5
             self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
     
     if lead['status'] and lead['checkSource'] != 'modelLead':
