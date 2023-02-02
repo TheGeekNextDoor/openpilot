@@ -281,9 +281,9 @@ class LongRangeLead():
     
     self._rate = 1/dt
     
-    self._debug_freq = 30
-    self._debug_counter = 30
-    self._reset_deriv_log_freq = 30
+    self._debug_freq = 120
+    self._debug_counter = 120
+    self._reset_deriv_log_freq = 120
     self._reset_deriv_log_counter = 0
     self.reset_deriv(derivative_period=derivative_period)
     self.log()
@@ -356,11 +356,10 @@ class LongRangeLead():
             or lead['dRel'] > 80.0 \
             or lead['vLeadK'] < 0.5:
           self.reset_deriv(reason=str(lead))
-        else:
-          self.y_rel_vals.append(lead['yRel'])
-          if len(self.y_rel_vals) == self.y_rel_vals.maxlen:
-            cap = abs(lead['vLead']) * 0.5
-            self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
+        self.y_rel_vals.append(lead['yRel'])
+        if len(self.y_rel_vals) == self.y_rel_vals.maxlen:
+          cap = abs(lead['vLeadK']) * 0.5
+          self.vLat = clip((self.y_rel_vals[-1] - self.y_rel_vals[0]) * self._d_period_recip, -cap, cap)
     
     if lead['status'] and lead['checkSource'] != 'modelLead':
       lead['dRel'] = self.dRel.x
