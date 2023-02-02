@@ -280,12 +280,12 @@ class LongRangeLead():
     self.reset()
     
     self._rate = 1/dt
-    self.reset_deriv(derivative_period=derivative_period)
     
     self._debug_freq = 30
     self._debug_counter = 30
     self._reset_deriv_log_freq = 30
     self._reset_deriv_log_counter = 0
+    self.reset_deriv(derivative_period=derivative_period)
     self.log()
     
   def log(self):
