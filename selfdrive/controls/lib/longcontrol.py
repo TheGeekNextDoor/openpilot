@@ -229,7 +229,7 @@ class LongControl():
       elif time_since_gas < self.gas_smooth_accel_time:
         smooth_factor = interp(time_since_gas, [self.gas_smooth_accel_time * 0.5, self.gas_smooth_accel_time], [self.pos_accel_gas_smooth_k, 0.0])
         smooth_factor = interp(CS.vEgo, self.pos_accel_gas_smooth_speed_bp, [smooth_factor, 0.0])
-        self.output_accel.x = max(self.output_accel.x, CS.aEgo)
+        self.output_accel.x = max([self.output_accel.x, CS.aEgo, min(0.0, output_accel)])
         self.output_accel.update_alpha(smooth_factor)
         self.output_accel.update(output_accel)
       else:
