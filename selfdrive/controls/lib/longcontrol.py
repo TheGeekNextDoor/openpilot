@@ -223,7 +223,7 @@ class LongControl():
     if CS.vEgo > self.pos_accel_smooth_min_speed and output_accel > self.last_output_accel:
       if not lead_present and time_since_lead < self.lead_gone_smooth_accel_time:
         smooth_factor = interp(time_since_lead, [self.lead_gone_smooth_accel_time * 0.5, self.lead_gone_smooth_accel_time], [self.pos_accel_lead_smooth_k, 0.0])
-        self.output_accel.x = max(self.output_accel.x, CS.aEgo)
+        self.output_accel.x = max([self.output_accel.x, CS.aEgo, min(0.0, output_accel)])
         self.output_accel.update_alpha(smooth_factor)
         self.output_accel.update(output_accel)
       elif time_since_gas < self.gas_smooth_accel_time:
